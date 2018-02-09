@@ -44,6 +44,9 @@ See [here](./misc/windows_instructions.md) for installing on windows.
 16. Lesson 16: LSTMs - Trump Tweets.
 17. Lesson 17: Trump - Stacking and Stateful LSTMs.
 18. Lesson 18: Fake News Classifier
+#### Others
+##### Deeplearning with python book
+
 
 
 ## YouTube playlist
