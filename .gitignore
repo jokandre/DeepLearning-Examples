@@ -12,3 +12,4 @@ data/
 *.json
 *.pkl
 *.csv
+idea/
