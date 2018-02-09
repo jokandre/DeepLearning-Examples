@@ -45,24 +45,8 @@ See [here](./misc/windows_instructions.md) for installing on windows.
 17. Lesson 17: Trump - Stacking and Stateful LSTMs.
 18. Lesson 18: Fake News Classifier
 
-## Support
-You can ask questions and join the development discussion:
-- On the [DeepSchool-io Google group](https://groups.google.com/forum/#!forum/deepschoolio). **Long detailed questions go here**.
-- On the DeepSchool-io Slack channel. Use [this link](https://intense-waters-64607.herokuapp.com/) to request an invitation to the channel.
-
-## Support Us
-There's a few ways you can support this initiative:
-1. Right now this is very much a self funded project. If you wish to see more and more high quality tutorials and videos support us at: https://www.patreon.com/deepschoolio
-2. Subscribe to our [YouTube channel here](http://www.youtube.com/user/sachinabey?sub_confirmation=1).
-3. Star this repository and share it!
-
-## Meetup
-First meetup node:
-https://www.meetup.com/DeepSchool-io/
 
 ## YouTube playlist
 Find the corresponding video tutorial here (not all notebooks have an associated video)
 https://www.youtube.com/playlist?list=PLIx9QCwIhuRS1SPS9LHF7VjvZyM1g2Swz
 
-### Notes
-<a name="myfootnote1">1</a>: Refer to this [Dockerfile](https://github.com/sachinruk/Dockerfiles/blob/master/ML_class/Dockerfile) and [this](https://github.com/sachinruk/Dockerfiles/blob/master/DS_base/Dockerfile) for information on how the docker image was built.
