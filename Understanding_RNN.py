@@ -5,10 +5,13 @@ Based on: https://github.com/fchollet/deep-learning-with-python-notebooks/blob/m
 """
 
 import numpy as np
+import keras
 from keras.datasets import imdb
 from keras.preprocessing import sequence
 from keras.models import Sequential
-from keras.layers import LSTM, Embedding, Dense
+from keras import layers
+from keras.optimizers import RMSprop
+
 import os
 from matplotlib import pyplot as plt
 
@@ -64,6 +67,9 @@ def read_file(show_graph = False):
 
     # Normalize
     # float_data = normalize_by_column(float_data[:])
+
+    # Ignore year, month, day
+    float_data = float_data[ : , 3: ]
     print('floatdata shape',float_data.shape)
 
     return float_data
@@ -79,7 +85,7 @@ def evaluate_naive_method(val_gen = None, val_steps=1):
     batch_maes = []
     for step in range(val_steps):
         samples, targets = next(val_gen)
-        preds = samples[:, -1, 1]
+        preds = samples[:, -1, 0]
         mae = np.mean(np.abs(preds - targets))
         batch_maes.append(mae)
     print('Naive prediction Mean Absolute Error:', np.mean(batch_maes))
@@ -117,8 +123,36 @@ def generator( data, lookback, delay=15, min_index=0, max_index=None,
         for j, row in enumerate(rows):
             indices = range(rows[j] - lookback, rows[j], step)
             samples[j] = data[indices]
-            targets[j] = data[rows[j] + delay][1]
+            targets[j] = data[rows[j] + delay][0]
         yield samples, targets
+
+
+def models(name, float_data):
+    if name == 'simple_gru':
+        model = Sequential()
+        model.add(layers.GRU(32,
+                             dropout=0.1,
+                             recurrent_dropout=0.5,
+                             return_sequences=True,
+                             input_shape=(None, float_data.shape[-1])))
+        model.add(layers.GRU(64, activation='relu',
+                             dropout=0.1,
+                             recurrent_dropout=0.5))
+        model.add(layers.Dense(1))
+
+    if name == '1layer_LSTM':
+        model = Sequential()
+        model.add(layers.LSTM(32,
+                             dropout=0.1,
+                             recurrent_dropout=0.5,
+                             return_sequences=True,
+                             input_shape=(None, float_data.shape[-1])))
+        model.add(layers.LSTM(64, activation='relu',
+                             dropout=0.1,
+                             recurrent_dropout=0.5))
+        model.add(layers.Dense(1))
+
+    return model
 
 
 def main():
@@ -126,9 +160,9 @@ def main():
     float_data = read_file()
 
     # each sample has this week + 56 past weeks(~one year)
-    lookback = 56 # one year
-    step = 7    # one week has 7 days of data(one per day)
-    delay = 2     # week
+    lookback = 365  # one year
+    step = 1    # do not skip data points (step over)
+    delay = 15     # predict 15th day in the future
     batch_size = 100
 
     train_gen = generator(float_data,
@@ -164,24 +198,34 @@ def main():
 
     evaluate_naive_method(val_gen=val_gen, val_steps=val_steps)
 
+    for model_name in ['simple_gru', '1layer_LSTM']:
+        print('Starting: ', model_name)
+        model = None
+        model = models(model_name, float_data)
+        model.compile(optimizer=RMSprop(), loss='mae', metrics=['acc'])
+
+        history = model.fit_generator(train_gen,
+                                      steps_per_epoch=15000//batch_size,
+                                      epochs=2,
+                                      validation_data=val_gen,
+                                      validation_steps=val_steps, verbose=2)
+
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+
+        epochs = range(len(loss))
+
+        plt.figure()
+
+        plt.plot(epochs, loss, 'bo', label='Training loss')
+        plt.plot(epochs, val_loss, 'b', label='Validation loss')
+        plt.title('Training and validation loss')
+        plt.legend()
+        plt.show()
 
 
-    max_features = 10000  # number of words to consider as features
-    maxlen = 500  # cut texts after this number of words (among top max_features most common words)
-    batch_size = 32
 
-    model = Sequential()
-    model.add(Embedding(max_features, 32))
-    model.add(LSTM(32))
-    model.add(Dense(1, activation='sigmoid'))
 
-    model.compile(optimizer='rmsprop',
-                  loss='binary_crossentropy',
-                  metrics=['acc'])
-    # history = model.fit(input_train, y_train,
-    #                     epochs=1,
-    #                     batch_size=128,
-    #                     validation_split=0.2)
 
 
 if __name__ == '__main__':
