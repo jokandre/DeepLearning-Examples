@@ -58,7 +58,7 @@ def read_file(show_graph = False):
         pass
 
     # replace -999 values with 0
-    float_data[float_data==-999] = 0
+    # float_data[float_data==-999] = 0
 
     if show_graph:
         temp = float_data[:, 3]  # temperature (in degrees Celsius)
@@ -66,11 +66,11 @@ def read_file(show_graph = False):
         plt.show()
 
     # Normalize
-    # float_data = normalize_by_column(float_data[:])
+    float_data = normalize_by_column(float_data)
 
     # Ignore year, month, day
     float_data = float_data[ : , 3: ]
-    print('floatdata shape',float_data.shape)
+    print('floatdata shape', float_data.shape)
 
     return float_data
 
@@ -140,6 +140,8 @@ def models(name, float_data):
                              recurrent_dropout=0.5))
         model.add(layers.Dense(1))
 
+        model.compile(optimizer=RMSprop(), loss='mae', metrics=['acc'])
+
     if name == '1layer_LSTM':
         model = Sequential()
         model.add(layers.LSTM(32,
@@ -149,8 +151,16 @@ def models(name, float_data):
                              input_shape=(None, float_data.shape[-1])))
         model.add(layers.LSTM(64, activation='relu',
                              dropout=0.1,
+                             return_sequences=False,
                              recurrent_dropout=0.5))
+
+        # model.add(layers.LSTM(128, activation='relu',
+        #                       dropout=0.1,
+        #                       recurrent_dropout=0.5))
+
         model.add(layers.Dense(1))
+
+        model.compile(loss='mae', optimizer=RMSprop())
 
     return model
 
@@ -198,17 +208,17 @@ def main():
 
     evaluate_naive_method(val_gen=val_gen, val_steps=val_steps)
 
-    for model_name in ['simple_gru', '1layer_LSTM']:
+    for model_name in ['1layer_LSTM']:
         print('Starting: ', model_name)
         model = None
         model = models(model_name, float_data)
-        model.compile(optimizer=RMSprop(), loss='mae', metrics=['acc'])
+
 
         history = model.fit_generator(train_gen,
                                       steps_per_epoch=15000//batch_size,
                                       epochs=2,
                                       validation_data=val_gen,
-                                      validation_steps=val_steps, verbose=2)
+                                      validation_steps=val_steps, verbose=1)
 
         loss = history.history['loss']
         val_loss = history.history['val_loss']
@@ -224,8 +234,14 @@ def main():
         plt.show()
 
 
+        y_pred = model.predict_generator(test_gen, steps=2000//batch_size )
 
+        for idx, bX, bY in test_gen():
+            y_truth = bY
+            print('Truth:{0:02f}, Prediction: {1:02f}'.format( y_truth, y_pred[idx] ))
 
+        for n in range(y_pred):
+            print(y_pred[0])
 
 
 if __name__ == '__main__':
